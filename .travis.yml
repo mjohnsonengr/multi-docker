@@ -4,15 +4,15 @@ services:
 
 before_install:
   - docker build -t mejdev/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t mejdev/multi-client ./client
+  - docker build -t mejdev/multi-nginx ./nginx
+  - docker build -t mejdev/multi-server ./server
+  - docker build -t mejdev/multi-worker ./worker
 
 script:
   - docker run -e CI=true mejdev/react-test npm test
 
 after_success:
-  - docker build -t mejdev/multi-client ./client
-  - docker build -t mejdev/multi-nginx ./nginx
-  - docker build -t mejdev/multi-server ./server
-  - docker build -t mejdev/multi-worker ./worker
   # Log in to the docker CLI
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
   # Take those images and push them to docker hub
