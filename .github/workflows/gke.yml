@@ -1,0 +1,69 @@
+name: deploy to GKE
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+
+      -
+        name: Build client tests
+        run: |-
+          docker build -t mejdev/react-test -f ./client/Dockerfile.dev ./client
+
+      -
+        name: Run client tests
+        run: docker run -e CI=true mejdev/react-test npm test
+  
+  build-and-push:
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+    strategy:
+      matrix:
+        include:
+          -
+            context: 'client'
+            image: 'multi-client'
+          -
+            context: 'server'
+            image: 'multi-server'
+          -
+            context: 'worker'
+            image: 'multi-worker'
+
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+
+      - 
+        name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      -
+        name: Build
+        run: |-
+          docker build \
+            -t mejdev/${{ matrix.image }}:latest \
+            -t mejdev/${{ matrix.image }}:${{ github.sha }} \
+            -f ./${{ matrix.context }}/Dockerfile \
+            ./${{ matrix.context }}
+      
+      -
+        name: Push
+        run: docker push mejdev/${{ matrix.image }}:${{ github.sha }}
