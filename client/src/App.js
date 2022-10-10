@@ -18,6 +18,7 @@ function App() {
           >
             Learn React
           </a>
+          Running on Kubernetes!
           <Link to="/">Home</Link>
           <Link to="/otherpage">Other Page</Link>
         </header>

@@ -98,9 +98,10 @@ jobs:
     -
       name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
+      run: gcloud components install gke-gcloud-auth-plugin
 
     - 
-      name: Get GKD credentials
+      name: Get GKE credentials
       run: |-
         gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
     
@@ -111,5 +112,7 @@ jobs:
         kubectl set image deployments/server-deployment server=mejdev/multi-server:${{ github.sha }}
         kubectl set image deployments/client-deployment client=mejdev/multi-client:${{ github.sha }}
         kubectl set image deployments/worker-deployment worker=mejdev/multi-worker:${{ github.sha }}
-        kubectl rollout status -f k8s
+        kubectl rollout status deployment/server-deployment
+        kubectl rollout status deployment/client-deployment
+        kubectl rollout status deployment/worker-deployment
         kubectl get services -o wide
