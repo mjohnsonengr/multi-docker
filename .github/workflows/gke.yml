@@ -102,7 +102,7 @@ jobs:
     - 
       name: Get GKD credentials
       run: |-
-        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "GKE_ZONE"
+        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "$GKE_ZONE"
     
     -
       name: Deploy
