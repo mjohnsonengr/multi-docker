@@ -5,6 +5,11 @@ on:
     branches:
       - 'main'
 
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: multi-cluster
+  GKE_ZONE: us-central1-c
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -66,4 +71,45 @@ jobs:
       
       -
         name: Push
-        run: docker push mejdev/${{ matrix.image }}:${{ github.sha }}
+        run: |-
+          docker push mejdev/${{ matrix.image }}:latest
+          docker push mejdev/${{ matrix.image }}:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # This is required for requesting the JWT for gcloud auth
+    
+    steps:
+    - 
+      name: Checkout
+      uses: actions/checkout@v3
+
+    - 
+      id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        workload_identity_provider: '${{ secrets.GCLOUD_WORKLOAD_IDENTITY_PROVIDER }}'
+        service_account: '${{ secrets.GCLOUD_SERVICE_ACCOUNT }}'
+
+    -
+      name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0
+
+    - 
+      name: Get GKD credentials
+      run: |-
+        gcloud container clusters get-credentials "$GKE_CLUSTER" --zone "GKE_ZONE"
+    
+    -
+      name: Deploy
+      run: |-
+        kubectl apply -f k8s
+        kubectl set image deployments/server-deployment server=mejdev/multi-server:${{ github.sha }}
+        kubectl set image deployments/client-deployment client=mejdev/multi-client:${{ github.sha }}
+        kubectl set image deployments/worker-deployment worker=mejdev/multi-worker:${{ github.sha }}
+        kubectl rollout status -f k8s
+        kubectl get services -o wide

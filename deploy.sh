@@ -2,6 +2,10 @@ docker build -t mejdev/multi-client:latest -t mejdev/multi-client:$SHA -f ./clie
 docker build -t mejdev/multi-server:latest -t mejdev/multi-server:$SHA -f ./server/Dockerfile ./server
 docker build -t mejdev/multi-worker:latest -t mejdev/multi-worker:$SHA -f ./worker/Dockerfile ./worker
 
+docker push mejdev/multi-client:latest
+docker push mejdev/multi-server:latest
+docker push mejdev/multi-worker:latest
+
 docker push mejdev/multi-client:$SHA
 docker push mejdev/multi-server:$SHA
 docker push mejdev/multi-worker:$SHA
