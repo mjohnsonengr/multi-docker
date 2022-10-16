@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+
+kind: Certificate
+metadata:
+  name: mej-dev-tls
+spec:
+  secretName: mej-dev
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: mej.dev
+  dnsNames:
+    - mej.dev
+    - www.mej.dev
